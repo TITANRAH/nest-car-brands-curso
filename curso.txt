@@ -1,0 +1,114 @@
+https://developer.mozilla.org/en-US/docs/Web/HTTP/Status
+
+hay varias formas de crear errores en las respuestas por ejem que 
+al soliitar un car con un id no lo encuentre 
+ if (!car ){
+        throw new NotFoundException(`Car con id ${id} no encontrado`)
+    }
+
+hay mas errores como NotFoundException ver en documentacion 
+
+npm i uuid
+
+luego 
+
+npm i --save-dev @types/uuid
+
+ValidationPipe necesita 
+
+ npm i class-validator class-transformer
+
+
+ class validator funciona asi
+
+ creo mi dto de como deberia lucir la data que haran el post 
+
+ le dijo a la funcion en controller 
+
+  @Post() <--- es post
+  @UsePipes(ValidationPipe) <---usaras un pipe en este caso validationpipe
+  createCar(@Body() createCarDto: CreateCarDto) { <---- tipo al body y digo que es de tipo del dto creado
+    console.log({ body: createCarDto });
+    return createCarDto;
+  }
+
+ en el dto aseguro que sea lo que necesito poniendo los decoradores y usando classvalidator
+
+
+import { IsString } from 'class-validator';
+
+export class CreateCarDto {
+  @IsString({message: 'El brand debe ser un string'})
+  readonly brand: string;
+
+  @IsString()
+  readonly model: string;
+}
+
+
+para que toda la app funcione con el validator lo puse a nivel mas alto , en el main
+
+import { NestFactory } from '@nestjs/core';
+import { AppModule } from './app.module';
+import { ValidationPipe } from '@nestjs/common';
+
+async function main() {
+  const app = await NestFactory.create(AppModule);
+  app.useGlobalPipes(
+    new ValidationPipe({
+      whitelist: true,
+      forbidNonWhitelisted: true
+    })
+  )
+  await app.listen(3000);
+}
+main();
+
+
+nest -h 
+
+te muestra todos los comanodos de recursos
+
+
+seed
+
+creo el componente seed 
+
+nest g res seed --no-spec 
+
+quitar todo lo no que necesitamos excepto Get 
+
+
+crear carpeta data en seed component que contendra los archivos cars.seed.ts  y brands.seed.ts
+
+el cual contendra un arreglo exportado de cars de tipo Car:[] y un arreglo tipo Brands:[]
+
+lo mismo para Brands
+
+en el seedservicde crear el servicio populateDB que retornara return `Seed executed`;
+
+en el get llamar al seedservice previamente inyectadon en el seedcontroller 
+
+  runSeed() {
+    return this.seedService.populateDB();
+  }
+
+en este pupulateDB que pertenece a seedService hay qued llamar al servicio que vive en carServices llamado  fillCarsWithSeedData(cars: Car[]) {
+    this.cars = cars;
+  }
+
+  y el de brands tambien y pupulateDB quedaria asi
+
+  populateDB() {
+    this.carsService.fillCarsWithSeedData(CARS_SEED);
+    this.brandsServices.fillBrandsWithSeedData(BRANDS_SEED)
+
+    return `Seed executed`;
+  }
+
+para ello hay que exportar el servicio de CarsService en el archivo cars.module  exports: [CarsService],
+
+y luego importar en seed.module import: [CarsModule] solo asi podremos llamar servicios dentro de otros servicios
+
+
+
